@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Control de Gastos - Mi Auto</title>
+    
+    <!-- Tailwind CSS con Configuración de Modo Oscuro -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#1e293b', // Un tono más oscuro para las tarjetas en dark mode
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Chart.js para gráficas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Estilos específicos para inputs en móvil para evitar zoom */
+        input, select, textarea { font-size: 16px !important; }
+        
+        /* Transición suave para el cambio de tema */
+        body, div, nav, input, select, button { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen pb-20 md:pb-0 transition-colors duration-300">
+
+    <!-- Navbar -->
+    <nav class="bg-blue-900 dark:bg-slate-950 text-white shadow-lg sticky top-0 z-50 safe-top border-b border-blue-800 dark:border-slate-800">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-car-side text-2xl text-blue-300"></i>
+                <h1 class="text-xl font-bold tracking-tight">AutoManager</h1>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- Theme Toggle Button -->
+                <button id="themeToggle" onclick="toggleTheme()" class="p-2 rounded-full bg-blue-800 dark:bg-slate-800 text-yellow-300 dark:text-blue-300 hover:bg-blue-700 dark:hover:bg-slate-700 transition shadow-inner">
+                    <i class="fa-solid fa-sun" id="themeIcon"></i>
+                </button>
+                
+                <div class="text-sm font-light hidden sm:block">
+                    Hola, Jorge
+                </div>
+            </div>
+            
+            <!-- Mobile Menu Button (Add Record Shortcut) -->
+            <button onclick="window.scrollTo({top: document.getElementById('expenseForm').offsetTop - 80, behavior: 'smooth'})" class="sm:hidden bg-blue-800 dark:bg-slate-800 p-2 rounded text-blue-200 ml-2">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        
+        <!-- Dashboard Stats - Scrollable Horizontal on Mobile -->
+        <div class="flex md:grid md:grid-cols-3 gap-4 mb-6 overflow-x-auto pb-2 md:pb-0 snap-x">
+            <!-- Total Card -->
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border-l-4 border-blue-600 dark:border-blue-500 flex-shrink-0 w-[85%] md:w-auto snap-center flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Gasto Total</p>
+                    <h2 class="text-2xl md:text-3xl font-bold mt-1 text-slate-800 dark:text-white" id="totalDisplay">$0.00</h2>
+                </div>
+                <div class="bg-blue-50 dark:bg-slate-700 p-3 rounded-full text-blue-600 dark:text-blue-400">
+                    <i class="fa-solid fa-wallet text-xl"></i>
+                </div>
+            </div>
+
+            <!-- Repairs Card -->
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border-l-4 border-red-500 flex-shrink-0 w-[85%] md:w-auto snap-center flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Reparaciones</p>
+                    <h2 class="text-2xl md:text-3xl font-bold mt-1 text-slate-800 dark:text-white" id="repairDisplay">$0.00</h2>
+                </div>
+                <div class="bg-red-50 dark:bg-slate-700 p-3 rounded-full text-red-600 dark:text-red-400">
+                    <i class="fa-solid fa-wrench text-xl"></i>
+                </div>
+            </div>
+
+            <!-- Last KM Card -->
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border-l-4 border-green-500 flex-shrink-0 w-[85%] md:w-auto snap-center flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Último Kilometraje</p>
+                    <h2 class="text-2xl md:text-3xl font-bold mt-1 text-slate-800 dark:text-white" id="kmDisplay">---</h2>
+                </div>
+                <div class="bg-green-50 dark:bg-slate-700 p-3 rounded-full text-green-600 dark:text-green-400">
+                    <i class="fa-solid fa-gauge-high text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+            
+            <!-- Left Column: Form & Chart -->
+            <div class="lg:col-span-1 space-y-6 md:space-y-8 order-1 md:order-1">
+                
+                <!-- Add Expense Form -->
+                <div id="expenseFormContainer" class="bg-white dark:bg-slate-800 p-5 md:p-6 rounded-xl shadow-md transition-colors">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-800 dark:text-white">
+                        <i class="fa-solid fa-circle-plus text-blue-600 dark:text-blue-400"></i> Nuevo Registro
+                    </h3>
+                    <form id="expenseForm" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Concepto</label>
+                            <input type="text" id="description" placeholder="Ej: Cambio de aceite..." class="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 dark:text-white rounded-lg focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition placeholder-slate-400 dark:placeholder-slate-500" required>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Monto ($)</label>
+                                <input type="number" id="amount" placeholder="0.00" step="0.01" class="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 dark:text-white rounded-lg focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Kms</label>
+                                <input type="number" id="km" placeholder="150000" class="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 dark:text-white rounded-lg focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Categoría</label>
+                                <div class="relative">
+                                    <select id="category" class="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 dark:text-white rounded-lg focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-blue-500 focus:outline-none appearance-none">
+                                        <option value="mantenimiento">Mantenimiento</option>
+                                        <option value="reparacion">Reparación</option>
+                                        <option value="combustible">Combustible</option>
+                                        <option value="otros">Otros</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 dark:text-slate-400">
+                                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Fecha</label>
+                                <input type="date" id="date" class="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 dark:text-white rounded-lg focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:[color-scheme:dark]" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold py-3.5 rounded-lg transition shadow-lg shadow-blue-200 dark:shadow-none active:scale-[0.98] mt-2 flex justify-center items-center gap-2">
+                            <span>Guardar</span> <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: History List -->
+            <div class="lg:col-span-2 order-2 md:order-2">
+                <div class="bg-white dark:bg-slate-800 md:rounded-xl shadow-md overflow-hidden rounded-xl transition-colors">
+                    <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10">
+                        <h3 class="text-lg font-bold text-slate-800 dark:text-white">Historial</h3>
+                        <div class="flex gap-3">
+                             <!-- Mobile Toggle Chart Button -->
+                            <button onclick="toggleChartMobile()" class="md:hidden text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400">
+                                <i class="fa-solid fa-chart-pie"></i>
+                            </button>
+                            <button onclick="clearAllData()" class="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold uppercase tracking-wider bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full transition">
+                                Borrar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Chart (Hidden by default on mobile) -->
+                    <div id="mobileChartContainer" class="hidden md:hidden bg-slate-50 dark:bg-slate-900/50 p-4 border-b border-slate-200 dark:border-slate-700">
+                        <div class="relative h-48 w-full">
+                             <canvas id="expenseChartMobile"></canvas>
+                        </div>
+                    </div>
+
+                    <div id="expenseList" class="divide-y divide-slate-100 dark:divide-slate-700">
+                        <!-- Content injected via JS -->
+                        <div id="emptyState" class="p-10 text-center text-slate-400 dark:text-slate-500">
+                            <i class="fa-solid fa-clipboard-list text-5xl mb-4 block opacity-20 mx-auto"></i>
+                            <p>No hay registros.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-slate-900/90 dark:bg-slate-100/90 backdrop-blur text-white dark:text-slate-900 px-6 py-3 rounded-full shadow-2xl translate-y-[-150%] transition-all duration-300 z-[100] flex items-center gap-3 w-11/12 max-w-sm justify-center border border-slate-700 dark:border-slate-300">
+        <i class="fa-solid fa-check-circle text-green-400 dark:text-green-600"></i>
+        <span id="toastMsg" class="font-medium text-sm">Operación exitosa</span>
+    </div>
+
+    <script>
+        // --- State Management ---
+        let expenses = JSON.parse(localStorage.getItem('myCarExpenses')) || [];
+        let mobileChartInstance = null;
+        
+        // --- Theme Logic ---
+        function initTheme() {
+            // Check localStorage or System Preference
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                updateThemeIcon(true);
+            } else {
+                document.documentElement.classList.remove('dark');
+                updateThemeIcon(false);
+            }
+        }
+
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.theme = 'light';
+                updateThemeIcon(false);
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.theme = 'dark';
+                updateThemeIcon(true);
+            }
+            // Update chart colors if needed (for legend mostly)
+            updateChart();
+        }
+
+        function updateThemeIcon(isDark) {
+            const icon = document.getElementById('themeIcon');
+            if (isDark) {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            } else {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            }
+        }
+
+        // --- DOM Elements ---
+        const form = document.getElementById('expenseForm');
+        const listContainer = document.getElementById('expenseList');
+        const emptyState = document.getElementById('emptyState');
+        const totalDisplay = document.getElementById('totalDisplay');
+        const repairDisplay = document.getElementById('repairDisplay');
+        const kmDisplay = document.getElementById('kmDisplay');
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toastMsg');
+        const mobileChartContainer = document.getElementById('mobileChartContainer');
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            document.getElementById('date').valueAsDate = new Date();
+            renderApp();
+        });
+
+        // --- Core Functions ---
+
+        function renderApp() {
+            renderList();
+            calculateStats();
+            updateChart(); // Updates the mobile chart instance
+        }
+
+        function saveExpenses() {
+            localStorage.setItem('myCarExpenses', JSON.stringify(expenses));
+            renderApp();
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const newExpense = {
+                id: Date.now(),
+                description: document.getElementById('description').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                km: document.getElementById('km').value,
+                category: document.getElementById('category').value,
+                date: document.getElementById('date').value
+            };
+
+            expenses.unshift(newExpense);
+            saveExpenses();
+            form.reset();
+            document.getElementById('date').valueAsDate = new Date();
+            showToast('Guardado correctamente');
+            
+            // Scroll to list on mobile after add
+            if(window.innerWidth < 768) {
+                listContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+
+        function deleteExpense(id) {
+            if(confirm('¿Borrar este registro?')) {
+                expenses = expenses.filter(exp => exp.id !== id);
+                saveExpenses();
+                showToast('Eliminado');
+            }
+        }
+
+        function clearAllData() {
+            if(confirm('¿Borrar TODO el historial?')) {
+                expenses = [];
+                saveExpenses();
+                showToast('Historial limpio');
+            }
+        }
+
+        // --- Rendering Logic (Mobile First Card Style) ---
+
+        function renderList() {
+            listContainer.innerHTML = '';
+            
+            if (expenses.length === 0) {
+                listContainer.appendChild(emptyState);
+                return;
+            }
+
+            expenses.forEach(exp => {
+                // Determine icons and colors based on Light/Dark
+                let lightClass = '';
+                let darkClass = '';
+                let catIcon = 'fa-circle';
+                let borderClass = '';
+                
+                // Using semantic logic inside template instead of complicated var swap
+                // We'll use Tailwind classes directly for colors
+                
+                let badgeClass = "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300";
+                
+                if (exp.category === 'reparacion') { 
+                    badgeClass = "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"; 
+                    catIcon = 'fa-wrench';
+                    borderClass = 'border-l-4 border-red-500';
+                } else if (exp.category === 'mantenimiento') { 
+                    badgeClass = "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"; 
+                    catIcon = 'fa-screwdriver-wrench';
+                    borderClass = 'border-l-4 border-blue-500';
+                } else if (exp.category === 'combustible') { 
+                    badgeClass = "bg-yellow-50 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400"; 
+                    catIcon = 'fa-gas-pump';
+                    borderClass = 'border-l-4 border-yellow-500';
+                } else {
+                    borderClass = 'border-l-4 border-slate-300 dark:border-slate-600';
+                }
+
+                const formattedAmount = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' }).format(exp.amount);
+                const dateObj = new Date(exp.date + 'T00:00:00');
+                const day = dateObj.getDate();
+                const month = dateObj.toLocaleDateString('es-ES', { month: 'short' }).toUpperCase();
+
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition fade-in bg-white dark:bg-slate-800 group relative ${borderClass} mb-3 md:mb-0 md:border-l-0 md:border-b dark:border-slate-700 last:mb-0 shadow-sm md:shadow-none rounded-lg md:rounded-none mx-2 md:mx-0 border border-slate-100 dark:border-slate-700 md:border-0`;
+                
+                itemDiv.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <!-- Date Box -->
+                            <div class="flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-lg p-2 min-w-[50px]">
+                                <span class="text-xs font-bold text-slate-500 dark:text-slate-400">${month}</span>
+                                <span class="text-xl font-bold text-slate-800 dark:text-white">${day}</span>
+                            </div>
+                            
+                            <!-- Content -->
+                            <div>
+                                <h4 class="font-bold text-slate-800 dark:text-white text-sm md:text-base">${exp.description}</h4>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${badgeClass}">
+                                        <i class="fa-solid ${catIcon}"></i> ${exp.category}
+                                    </span>
+                                    <span class="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                                        <i class="fa-solid fa-gauge text-[10px] ml-1"></i> ${exp.km} km
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Amount & Action -->
+                        <div class="text-right">
+                            <div class="font-bold text-slate-700 dark:text-slate-200 text-lg">${formattedAmount}</div>
+                            <button onclick="deleteExpense(${exp.id})" class="text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 p-2 -mr-2 mt-1 transition">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                listContainer.appendChild(itemDiv);
+            });
+        }
+
+        function calculateStats() {
+            const total = expenses.reduce((sum, item) => sum + item.amount, 0);
+            totalDisplay.textContent = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC', maximumFractionDigits: 0 }).format(total);
+
+            const repairTotal = expenses
+                .filter(item => item.category === 'reparacion')
+                .reduce((sum, item) => sum + item.amount, 0);
+            repairDisplay.textContent = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC', maximumFractionDigits: 0 }).format(repairTotal);
+
+            if (expenses.length > 0) {
+                const maxKm = Math.max(...expenses.map(e => parseInt(e.km) || 0));
+                kmDisplay.textContent = maxKm.toLocaleString();
+            } else {
+                kmDisplay.textContent = '---';
+            }
+        }
+
+        function toggleChartMobile() {
+            mobileChartContainer.classList.toggle('hidden');
+        }
+
+        function updateChart() {
+            const ctx = document.getElementById('expenseChartMobile').getContext('2d');
+            const isDark = document.documentElement.classList.contains('dark');
+            const legendColor = isDark ? '#94a3b8' : '#475569'; // Slate-400 vs Slate-600
+
+            const categories = { 'mantenimiento': 0, 'reparacion': 0, 'combustible': 0, 'otros': 0 };
+            expenses.forEach(exp => { if (categories[exp.category] !== undefined) categories[exp.category] += exp.amount; });
+            const dataValues = Object.values(categories);
+
+            if (mobileChartInstance) { mobileChartInstance.destroy(); }
+            
+            mobileChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Mantenimiento', 'Reparación', 'Combustible', 'Otros'],
+                    datasets: [{
+                        data: dataValues,
+                        backgroundColor: ['#3b82f6', '#ef4444', '#eab308', '#94a3b8'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            position: 'left', 
+                            labels: { 
+                                boxWidth: 12, 
+                                font: { size: 10 },
+                                color: legendColor
+                            } 
+                        } 
+                    },
+                    layout: { padding: 0 }
+                }
+            });
+        }
+
+        // --- UI Utilities ---
+        function showToast(message) {
+            toastMsg.textContent = message;
+            toast.classList.remove('translate-y-[-150%]');
+            toast.classList.add('translate-y-4'); // Slight margin from top
+            setTimeout(() => {
+                toast.classList.remove('translate-y-4');
+                toast.classList.add('translate-y-[-150%]');
+            }, 3000);
+        }
+
+    </script>
+</body>
+</html>
