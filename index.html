@@ -14,7 +14,7 @@
                 extend: {
                     colors: {
                         slate: {
-                            850: '#1e293b', // Un tono más oscuro para las tarjetas en dark mode
+                            850: '#1e293b',
                         }
                     }
                 }
@@ -36,10 +36,8 @@
         .fade-in { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Estilos específicos para inputs en móvil para evitar zoom */
         input, select, textarea { font-size: 16px !important; }
         
-        /* Transición suave para el cambio de tema */
         body, div, nav, input, select, button { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
     </style>
 </head>
@@ -54,7 +52,6 @@
             </div>
             
             <div class="flex items-center gap-4">
-                <!-- Theme Toggle Button -->
                 <button id="themeToggle" onclick="toggleTheme()" class="p-2 rounded-full bg-blue-800 dark:bg-slate-800 text-yellow-300 dark:text-blue-300 hover:bg-blue-700 dark:hover:bg-slate-700 transition shadow-inner">
                     <i class="fa-solid fa-sun" id="themeIcon"></i>
                 </button>
@@ -64,8 +61,7 @@
                 </div>
             </div>
             
-            <!-- Mobile Menu Button (Add Record Shortcut) -->
-            <button onclick="window.scrollTo({top: document.getElementById('expenseForm').offsetTop - 80, behavior: 'smooth'})" class="sm:hidden bg-blue-800 dark:bg-slate-800 p-2 rounded text-blue-200 ml-2">
+            <button onclick="scrollToForm()" class="sm:hidden bg-blue-800 dark:bg-slate-800 p-2 rounded text-blue-200 ml-2">
                 <i class="fa-solid fa-plus"></i>
             </button>
         </div>
@@ -74,9 +70,8 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-6">
         
-        <!-- Dashboard Stats - Scrollable Horizontal on Mobile -->
+        <!-- Dashboard Stats -->
         <div class="flex md:grid md:grid-cols-3 gap-4 mb-6 overflow-x-auto pb-2 md:pb-0 snap-x">
-            <!-- Total Card -->
             <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border-l-4 border-blue-600 dark:border-blue-500 flex-shrink-0 w-[85%] md:w-auto snap-center flex items-center justify-between">
                 <div>
                     <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Gasto Total</p>
@@ -87,7 +82,6 @@
                 </div>
             </div>
 
-            <!-- Repairs Card -->
             <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border-l-4 border-red-500 flex-shrink-0 w-[85%] md:w-auto snap-center flex items-center justify-between">
                 <div>
                     <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Reparaciones</p>
@@ -98,7 +92,6 @@
                 </div>
             </div>
 
-            <!-- Last KM Card -->
             <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border-l-4 border-green-500 flex-shrink-0 w-[85%] md:w-auto snap-center flex items-center justify-between">
                 <div>
                     <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Último Kilometraje</p>
@@ -112,15 +105,15 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
             
-            <!-- Left Column: Form & Chart -->
+            <!-- Left Column: Form -->
             <div class="lg:col-span-1 space-y-6 md:space-y-8 order-1 md:order-1">
                 
-                <!-- Add Expense Form -->
-                <div id="expenseFormContainer" class="bg-white dark:bg-slate-800 p-5 md:p-6 rounded-xl shadow-md transition-colors">
-                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-800 dark:text-white">
+                <div id="expenseFormContainer" class="bg-white dark:bg-slate-800 p-5 md:p-6 rounded-xl shadow-md transition-colors border border-transparent">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-800 dark:text-white" id="formTitle">
                         <i class="fa-solid fa-circle-plus text-blue-600 dark:text-blue-400"></i> Nuevo Registro
                     </h3>
                     <form id="expenseForm" class="space-y-4">
+                        <input type="hidden" id="editId" value="">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Concepto</label>
                             <input type="text" id="description" placeholder="Ej: Cambio de aceite..." class="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 dark:text-white rounded-lg focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition placeholder-slate-400 dark:placeholder-slate-500" required>
@@ -158,9 +151,15 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold py-3.5 rounded-lg transition shadow-lg shadow-blue-200 dark:shadow-none active:scale-[0.98] mt-2 flex justify-center items-center gap-2">
-                            <span>Guardar</span> <i class="fa-solid fa-arrow-right"></i>
-                        </button>
+                        <div class="flex gap-2">
+                            <button type="submit" id="submitBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold py-3.5 rounded-lg transition shadow-lg shadow-blue-200 dark:shadow-none active:scale-[0.98] mt-2 flex justify-center items-center gap-2">
+                                <span>Guardar</span> <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                            
+                            <button type="button" id="cancelBtn" onclick="cancelEdit()" class="hidden w-1/3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold py-3.5 rounded-lg transition mt-2 justify-center items-center">
+                                Cancelar
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -171,17 +170,15 @@
                     <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10">
                         <h3 class="text-lg font-bold text-slate-800 dark:text-white">Historial</h3>
                         <div class="flex gap-3">
-                             <!-- Mobile Toggle Chart Button -->
                             <button onclick="toggleChartMobile()" class="md:hidden text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400">
                                 <i class="fa-solid fa-chart-pie"></i>
                             </button>
                             <button onclick="clearAllData()" class="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold uppercase tracking-wider bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full transition">
-                                Borrar
+                                Borrar Todo
                             </button>
                         </div>
                     </div>
 
-                    <!-- Mobile Chart (Hidden by default on mobile) -->
                     <div id="mobileChartContainer" class="hidden md:hidden bg-slate-50 dark:bg-slate-900/50 p-4 border-b border-slate-200 dark:border-slate-700">
                         <div class="relative h-48 w-full">
                              <canvas id="expenseChartMobile"></canvas>
@@ -210,10 +207,10 @@
         // --- State Management ---
         let expenses = JSON.parse(localStorage.getItem('myCarExpenses')) || [];
         let mobileChartInstance = null;
+        let editingId = null; // Track what we are editing
         
         // --- Theme Logic ---
         function initTheme() {
-            // Check localStorage or System Preference
             if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
                 updateThemeIcon(true);
@@ -233,7 +230,6 @@
                 localStorage.theme = 'dark';
                 updateThemeIcon(true);
             }
-            // Update chart colors if needed (for legend mostly)
             updateChart();
         }
 
@@ -258,6 +254,10 @@
         const toast = document.getElementById('toast');
         const toastMsg = document.getElementById('toastMsg');
         const mobileChartContainer = document.getElementById('mobileChartContainer');
+        const formContainer = document.getElementById('expenseFormContainer');
+        const submitBtn = document.getElementById('submitBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const formTitle = document.getElementById('formTitle');
 
         // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -271,7 +271,7 @@
         function renderApp() {
             renderList();
             calculateStats();
-            updateChart(); // Updates the mobile chart instance
+            updateChart();
         }
 
         function saveExpenses() {
@@ -279,31 +279,100 @@
             renderApp();
         }
 
+        function scrollToForm() {
+            window.scrollTo({top: formContainer.offsetTop - 80, behavior: 'smooth'});
+        }
+
+        // --- Edit Mode Logic ---
+
+        function startEdit(id) {
+            const expense = expenses.find(e => e.id === id);
+            if (!expense) return;
+
+            editingId = id;
+            
+            // Populate form
+            document.getElementById('description').value = expense.description;
+            document.getElementById('amount').value = expense.amount;
+            document.getElementById('km').value = expense.km;
+            document.getElementById('category').value = expense.category;
+            document.getElementById('date').value = expense.date;
+
+            // Change UI to Edit Mode
+            formContainer.classList.add('ring-2', 'ring-blue-500', 'dark:ring-blue-400');
+            submitBtn.innerHTML = '<span>Actualizar</span> <i class="fa-solid fa-rotate"></i>';
+            submitBtn.classList.remove('bg-blue-600', 'dark:bg-blue-500');
+            submitBtn.classList.add('bg-green-600', 'dark:bg-green-600');
+            
+            cancelBtn.classList.remove('hidden');
+            cancelBtn.classList.add('flex');
+            
+            formTitle.innerHTML = '<i class="fa-solid fa-pen-to-square text-green-500"></i> Editando Registro';
+
+            scrollToForm();
+            showToast('Modo edición activado');
+        }
+
+        function cancelEdit() {
+            editingId = null;
+            form.reset();
+            document.getElementById('date').valueAsDate = new Date();
+            
+            // Reset UI
+            formContainer.classList.remove('ring-2', 'ring-blue-500', 'dark:ring-blue-400');
+            submitBtn.innerHTML = '<span>Guardar</span> <i class="fa-solid fa-arrow-right"></i>';
+            submitBtn.classList.add('bg-blue-600', 'dark:bg-blue-500');
+            submitBtn.classList.remove('bg-green-600', 'dark:bg-green-600');
+            
+            cancelBtn.classList.add('hidden');
+            cancelBtn.classList.remove('flex');
+            
+            formTitle.innerHTML = '<i class="fa-solid fa-circle-plus text-blue-600 dark:text-blue-400"></i> Nuevo Registro';
+        }
+
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             
-            const newExpense = {
-                id: Date.now(),
-                description: document.getElementById('description').value,
-                amount: parseFloat(document.getElementById('amount').value),
-                km: document.getElementById('km').value,
-                category: document.getElementById('category').value,
-                date: document.getElementById('date').value
-            };
+            const description = document.getElementById('description').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const km = document.getElementById('km').value;
+            const category = document.getElementById('category').value;
+            const date = document.getElementById('date').value;
 
-            expenses.unshift(newExpense);
-            saveExpenses();
-            form.reset();
-            document.getElementById('date').valueAsDate = new Date();
-            showToast('Guardado correctamente');
-            
-            // Scroll to list on mobile after add
-            if(window.innerWidth < 768) {
-                listContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (editingId) {
+                // Update existing
+                const index = expenses.findIndex(e => e.id === editingId);
+                if (index !== -1) {
+                    expenses[index] = {
+                        id: editingId, // Keep original ID
+                        description, amount, km, category, date
+                    };
+                    showToast('Registro actualizado');
+                }
+                cancelEdit(); // Exit edit mode
+            } else {
+                // Create new
+                const newExpense = {
+                    id: Date.now(),
+                    description, amount, km, category, date
+                };
+                expenses.unshift(newExpense);
+                showToast('Guardado correctamente');
+                form.reset();
+                document.getElementById('date').valueAsDate = new Date();
+                
+                if(window.innerWidth < 768) {
+                    listContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             }
+            saveExpenses();
         });
 
         function deleteExpense(id) {
+            if (editingId === id) {
+                alert("No puedes borrar un registro mientras lo estás editando.");
+                return;
+            }
             if(confirm('¿Borrar este registro?')) {
                 expenses = expenses.filter(exp => exp.id !== id);
                 saveExpenses();
@@ -313,13 +382,14 @@
 
         function clearAllData() {
             if(confirm('¿Borrar TODO el historial?')) {
+                cancelEdit(); // Reset form if editing
                 expenses = [];
                 saveExpenses();
                 showToast('Historial limpio');
             }
         }
 
-        // --- Rendering Logic (Mobile First Card Style) ---
+        // --- Rendering Logic ---
 
         function renderList() {
             listContainer.innerHTML = '';
@@ -330,16 +400,9 @@
             }
 
             expenses.forEach(exp => {
-                // Determine icons and colors based on Light/Dark
-                let lightClass = '';
-                let darkClass = '';
+                let badgeClass = "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300";
                 let catIcon = 'fa-circle';
                 let borderClass = '';
-                
-                // Using semantic logic inside template instead of complicated var swap
-                // We'll use Tailwind classes directly for colors
-                
-                let badgeClass = "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300";
                 
                 if (exp.category === 'reparacion') { 
                     badgeClass = "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"; 
@@ -357,24 +420,26 @@
                     borderClass = 'border-l-4 border-slate-300 dark:border-slate-600';
                 }
 
+                // Check if this item is being edited
+                const isEditing = exp.id === editingId;
+                const activeClass = isEditing ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-900/10' : '';
+
                 const formattedAmount = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' }).format(exp.amount);
                 const dateObj = new Date(exp.date + 'T00:00:00');
                 const day = dateObj.getDate();
                 const month = dateObj.toLocaleDateString('es-ES', { month: 'short' }).toUpperCase();
 
                 const itemDiv = document.createElement('div');
-                itemDiv.className = `p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition fade-in bg-white dark:bg-slate-800 group relative ${borderClass} mb-3 md:mb-0 md:border-l-0 md:border-b dark:border-slate-700 last:mb-0 shadow-sm md:shadow-none rounded-lg md:rounded-none mx-2 md:mx-0 border border-slate-100 dark:border-slate-700 md:border-0`;
+                itemDiv.className = `p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition fade-in bg-white dark:bg-slate-800 group relative ${borderClass} mb-3 md:mb-0 md:border-l-0 md:border-b dark:border-slate-700 last:mb-0 shadow-sm md:shadow-none rounded-lg md:rounded-none mx-2 md:mx-0 border border-slate-100 dark:border-slate-700 md:border-0 ${activeClass}`;
                 
                 itemDiv.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
-                            <!-- Date Box -->
                             <div class="flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-lg p-2 min-w-[50px]">
                                 <span class="text-xs font-bold text-slate-500 dark:text-slate-400">${month}</span>
                                 <span class="text-xl font-bold text-slate-800 dark:text-white">${day}</span>
                             </div>
                             
-                            <!-- Content -->
                             <div>
                                 <h4 class="font-bold text-slate-800 dark:text-white text-sm md:text-base">${exp.description}</h4>
                                 <div class="flex items-center gap-2 mt-1">
@@ -388,12 +453,16 @@
                             </div>
                         </div>
 
-                        <!-- Amount & Action -->
-                        <div class="text-right">
+                        <div class="text-right flex flex-col items-end">
                             <div class="font-bold text-slate-700 dark:text-slate-200 text-lg">${formattedAmount}</div>
-                            <button onclick="deleteExpense(${exp.id})" class="text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 p-2 -mr-2 mt-1 transition">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
+                            <div class="flex gap-1 mt-1">
+                                <button onclick="startEdit(${exp.id})" class="text-slate-400 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 p-2 transition" title="Editar">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button onclick="deleteExpense(${exp.id})" class="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 p-2 transition" title="Borrar">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -425,7 +494,7 @@
         function updateChart() {
             const ctx = document.getElementById('expenseChartMobile').getContext('2d');
             const isDark = document.documentElement.classList.contains('dark');
-            const legendColor = isDark ? '#94a3b8' : '#475569'; // Slate-400 vs Slate-600
+            const legendColor = isDark ? '#94a3b8' : '#475569';
 
             const categories = { 'mantenimiento': 0, 'reparacion': 0, 'combustible': 0, 'otros': 0 };
             expenses.forEach(exp => { if (categories[exp.category] !== undefined) categories[exp.category] += exp.amount; });
@@ -461,11 +530,10 @@
             });
         }
 
-        // --- UI Utilities ---
         function showToast(message) {
             toastMsg.textContent = message;
             toast.classList.remove('translate-y-[-150%]');
-            toast.classList.add('translate-y-4'); // Slight margin from top
+            toast.classList.add('translate-y-4');
             setTimeout(() => {
                 toast.classList.remove('translate-y-4');
                 toast.classList.add('translate-y-[-150%]');
